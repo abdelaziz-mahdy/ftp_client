@@ -38,11 +38,18 @@ class _FTPHomePageState extends State<FTPHomePage> {
         print(message);
       },
     );
-    await ftpConnect!.connect();
-    setState(() {
-      isConnected = true;
-    });
-    _listDirectory();
+    try {
+      await ftpConnect!.connect();
+      setState(() {
+        isConnected = true;
+      });
+      _listDirectory();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to connect, $e')));
+      }
+    }
   }
 
   Future<void> _listDirectory([FtpDirectory? dir]) async {
@@ -79,11 +86,18 @@ class _FTPHomePageState extends State<FTPHomePage> {
   }
 
   Future<void> _downloadFile(FtpFile file) async {
-    Directory? downloadsDirectory = await getDownloadsDirectory();
-    List<int> result =
-        await ftpConnect!.fs.downloadFile(file, onReceiveProgress: (_, __, p) {
-      print("downloaded: $p");
-    });
+    try {
+      Directory? downloadsDirectory = await getDownloadsDirectory();
+      List<int> result = await ftpConnect!.fs.downloadFile(file,
+          onReceiveProgress: (_, __, p) {
+        print("downloaded: $p");
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to download: ${file.name} $e')));
+      }
+    }
     // if (result) {
     //   ScaffoldMessenger.of(context)
     //       .showSnackBar(SnackBar(content: Text('Downloaded: $fileName')));
