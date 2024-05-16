@@ -215,10 +215,10 @@ packages:
     dependency: "direct main"
     description:
       name: pure_ftp
-      sha256: "10517be35bf739af315562c3543b76eca649e79c24a46e4f0888783b9a97bdc0"
+      sha256: c5f9cd1238282b3ad34c0630d8acfab959ce29baf7f03f8e3ce169e27afa4e12
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.0"
+    version: "0.7.1"
   sky_engine:
     dependency: transitive
     description: flutter

@@ -28,7 +28,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
   bool isConnected = false;
   FtpClient? ftpConnect;
   List<FtpEntry> entries = [];
-
+  FtpDirectory? currentDirectory;
   Future<void> _connectToFTP() async {
     ftpConnect = FtpClient(
       socketInitOptions:
@@ -60,6 +60,8 @@ class _FTPHomePageState extends State<FTPHomePage> {
   }
 
   Future<void> _listDirectory([FtpDirectory? dir]) async {
+    await checkConnection();
+
     // if (dir != null) {
     //   bool result = await ftpConnect!.changeDirectory(dir.path);
     //   if (!result) {
@@ -67,9 +69,8 @@ class _FTPHomePageState extends State<FTPHomePage> {
     //   }
     // }
 
-    await checkConnection();
     print("directory: ${ftpConnect!.currentDirectory}");
-
+    currentDirectory = dir ?? ftpConnect!.currentDirectory;
     final dirEntries = await ftpConnect!.fs.listDirectory(directory: dir);
     // Sort directories first
     dirEntries.sort((a, b) {
@@ -94,12 +95,26 @@ class _FTPHomePageState extends State<FTPHomePage> {
   }
 
   Future<void> _downloadFile(FtpFile file) async {
+    await checkConnection();
     try {
       Directory? downloadsDirectory = await getDownloadsDirectory();
-      print(file.info);
+      print("file size: ${file.info!.size ?? ""}");
+
+      // Record the start time
+      DateTime startTime = DateTime.now();
+
       List<int> result = await ftpConnect!.fs.downloadFile(file,
-          onReceiveProgress: (_, __, p) {
-        print("downloaded: $p");
+          onReceiveProgress: (bytes, total, p) {
+        // Calculate elapsed time
+        DateTime currentTime = DateTime.now();
+        Duration elapsed = currentTime.difference(startTime);
+
+        // Calculate download speed in bytes per second
+        double speed = bytes / elapsed.inSeconds;
+
+        // Print progress and speed
+        print(
+            "downloaded: $bytes of $total, $p% calculated ${bytes / total * 100}%, speed: ${(speed / 1024 / 1024).toStringAsFixed(2)} MB/second");
       });
     } catch (e) {
       if (mounted) {
@@ -107,13 +122,6 @@ class _FTPHomePageState extends State<FTPHomePage> {
             SnackBar(content: Text('Failed to download: ${file.name} $e')));
       }
     }
-    // if (result) {
-    //   ScaffoldMessenger.of(context)
-    //       .showSnackBar(SnackBar(content: Text('Downloaded: $fileName')));
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text('Failed to download: $fileName')));
-    // }
   }
 
   @override
@@ -184,9 +192,8 @@ class _FTPHomePageState extends State<FTPHomePage> {
             onTap: () {
               if (entry.isDirectory) {
                 if (entry.name == '..') {
-                  ftpConnect!.fs
-                      .changeDirectoryUp()
-                      .then((_) => _listDirectory());
+                  currentDirectory = currentDirectory?.parent;
+                  _listDirectory(currentDirectory);
                 } else {
                   _listDirectory(entry as FtpDirectory);
                 }
