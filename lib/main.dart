@@ -28,7 +28,6 @@ class _FTPHomePageState extends State<FTPHomePage> {
   bool isConnected = false;
   FtpClient? ftpConnect;
   List<FtpEntry> entries = [];
-  FtpDirectory? currentDirectory;
   Future<void> _connectToFTP() async {
     ftpConnect = FtpClient(
       socketInitOptions:
@@ -62,16 +61,15 @@ class _FTPHomePageState extends State<FTPHomePage> {
   Future<void> _listDirectory([FtpDirectory? dir]) async {
     await checkConnection();
 
-    // if (dir != null) {
-    //   bool result = await ftpConnect!.changeDirectory(dir.path);
-    //   if (!result) {
-    //     print('Failed to change directory');
-    //   }
-    // }
+    if (dir != null) {
+      bool result = await ftpConnect!.changeDirectory(dir.path);
+      if (!result) {
+        print('Failed to change directory');
+      }
+    }
 
     print("directory: ${ftpConnect!.currentDirectory}");
-    currentDirectory = dir ?? ftpConnect!.currentDirectory;
-    final dirEntries = await ftpConnect!.fs.listDirectory(directory: dir);
+    final dirEntries = await ftpConnect!.fs.listDirectory();
     // Sort directories first
     dirEntries.sort((a, b) {
       if (a.isDirectory && !b.isDirectory) {
@@ -103,7 +101,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
       // Record the start time
       DateTime startTime = DateTime.now();
 
-      List<int> result = await ftpConnect!.fs.downloadFile(file,
+      List<int> bytes = await ftpConnect!.fs.downloadFile(file,
           onReceiveProgress: (bytes, total, p) {
         // Calculate elapsed time
         DateTime currentTime = DateTime.now();
@@ -116,6 +114,8 @@ class _FTPHomePageState extends State<FTPHomePage> {
         print(
             "downloaded: $bytes of $total, $p% calculated ${bytes / total * 100}%, speed: ${(speed / 1024 / 1024).toStringAsFixed(2)} MB/second");
       });
+
+      File('${downloadsDirectory!.path}/${file.name}').writeAsBytes(bytes);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -189,11 +189,11 @@ class _FTPHomePageState extends State<FTPHomePage> {
           return ListTile(
             leading: Icon(entry.isDirectory ? Icons.folder : Icons.file_copy),
             title: Text(entry.name!),
-            onTap: () {
+            onTap: () async {
               if (entry.isDirectory) {
                 if (entry.name == '..') {
-                  currentDirectory = currentDirectory?.parent;
-                  _listDirectory(currentDirectory);
+                  await ftpConnect!.changeDirectoryUp();
+                  _listDirectory();
                 } else {
                   _listDirectory(entry as FtpDirectory);
                 }

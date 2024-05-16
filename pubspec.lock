@@ -214,10 +214,11 @@ packages:
   pure_ftp:
     dependency: "direct main"
     description:
-      name: pure_ftp
-      sha256: c5f9cd1238282b3ad34c0630d8acfab959ce29baf7f03f8e3ce169e27afa4e12
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: test_list_dir
+      resolved-ref: "7adb6136b073bdc964fdc1c007f7f02b9ffb4f08"
+      url: "https://github.com/crifurch/pure_ftp"
+    source: git
     version: "0.7.1"
   sky_engine:
     dependency: transitive
