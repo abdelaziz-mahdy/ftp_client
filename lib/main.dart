@@ -52,6 +52,13 @@ class _FTPHomePageState extends State<FTPHomePage> {
     }
   }
 
+  Future<void> checkConnection() async {
+    bool result = await ftpConnect!.isConnected();
+    setState(() {
+      isConnected = result;
+    });
+  }
+
   Future<void> _listDirectory([FtpDirectory? dir]) async {
     // if (dir != null) {
     //   bool result = await ftpConnect!.changeDirectory(dir.path);
@@ -60,6 +67,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
     //   }
     // }
 
+    await checkConnection();
     print("directory: ${ftpConnect!.currentDirectory}");
 
     final dirEntries = await ftpConnect!.fs.listDirectory(directory: dir);
@@ -70,7 +78,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
       } else if (!a.isDirectory && b.isDirectory) {
         return 1;
       } else {
-        return a.name!.compareTo(b.name!);
+        return a.name.compareTo(b.name);
       }
     });
     if (dir != null && dir.path != '/') {
@@ -88,6 +96,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
   Future<void> _downloadFile(FtpFile file) async {
     try {
       Directory? downloadsDirectory = await getDownloadsDirectory();
+      print(file.info);
       List<int> result = await ftpConnect!.fs.downloadFile(file,
           onReceiveProgress: (_, __, p) {
         print("downloaded: $p");
