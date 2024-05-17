@@ -28,7 +28,11 @@ class _FTPHomePageState extends State<FTPHomePage> {
   bool isConnected = false;
   FtpClient? ftpConnect;
   List<FtpEntry> entries = [];
+  bool _isLoading = false;
   Future<void> _connectToFTP() async {
+    setState(() {
+      _isLoading = true;
+    });
     ftpConnect = FtpClient(
       socketInitOptions:
           FtpSocketInitOptions(host: host, port: int.parse(port)),
@@ -41,12 +45,19 @@ class _FTPHomePageState extends State<FTPHomePage> {
       await ftpConnect!.connect();
       setState(() {
         isConnected = true;
+        _isLoading = false;
       });
       _listDirectory();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Failed to connect, $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -70,6 +81,7 @@ class _FTPHomePageState extends State<FTPHomePage> {
 
     print("directory: ${ftpConnect!.currentDirectory}");
     final dirEntries = await ftpConnect!.fs.listDirectory();
+    print("list: $dirEntries");
     // Sort directories first
     dirEntries.sort((a, b) {
       if (a.isDirectory && !b.isDirectory) {
@@ -134,7 +146,28 @@ class _FTPHomePageState extends State<FTPHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: isConnected
+            ? IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () async {
+                  await ftpConnect?.disconnect();
+                  setState(() {
+                    isConnected = false;
+                  });
+                },
+              )
+            : null,
         title: Text('FTP Connect App'),
+        actions: [
+          isConnected
+              ? IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: () async {
+                    _listDirectory();
+                  },
+                )
+              : Container(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -151,11 +184,11 @@ class _FTPHomePageState extends State<FTPHomePage> {
           TextFormField(
             decoration: InputDecoration(labelText: 'Host'),
             onChanged: (value) => host = value,
-            initialValue: '192.168.1.5',
+            initialValue: host,
           ),
           TextFormField(
             decoration: InputDecoration(labelText: 'Port'),
-            initialValue: '15114',
+            initialValue: port,
             onChanged: (value) => port = value,
           ),
           TextFormField(
@@ -169,10 +202,12 @@ class _FTPHomePageState extends State<FTPHomePage> {
             obscureText: true,
           ),
           SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _connectToFTP,
-            child: Text('Connect'),
-          ),
+          _isLoading
+              ? CircularProgressIndicator()
+              : ElevatedButton(
+                  onPressed: _connectToFTP,
+                  child: Text('Connect'),
+                ),
         ],
       ),
     );
