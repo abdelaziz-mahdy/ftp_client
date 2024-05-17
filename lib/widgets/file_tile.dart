@@ -30,6 +30,12 @@ class _FileTileState extends State<FileTile> {
     });
   }
 
+  void _snackBarCallback(FtpFile file, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final entry = widget.entry;
@@ -83,7 +89,7 @@ class _FileTileState extends State<FileTile> {
                 widget.downloadManager.addToQueue(
                   file,
                   widget.ftpClientManager.ftpConnect!,
-                  context,
+                  _snackBarCallback,
                   _updateProgress,
                 );
               },
