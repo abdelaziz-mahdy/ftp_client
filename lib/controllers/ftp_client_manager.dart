@@ -21,6 +21,7 @@ class FTPClientManager {
     );
     try {
       await ftpConnect!.connect();
+      await ftpConnect!.socket.setTransferType(FtpTransferType.binary);
       isConnected = true;
       await listDirectory();
     } catch (e) {

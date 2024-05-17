@@ -56,7 +56,11 @@ class DownloadManager {
       double speed = receivedBytes / elapsed.inSeconds;
       print(
           "downloaded: $receivedBytes of $totalBytes, $percent% calculated ${receivedBytes / totalBytes * 100}%, speed: ${(speed / 1024 / 1024).toStringAsFixed(2)} MB/second");
-      progressCallback(percent / 100);
+      if (file.info?.size != null) {
+        progressCallback((receivedBytes / file.info!.size!));
+      } else {
+        progressCallback(percent / 100);
+      }
     });
 
     await File('${downloadsDirectory!.path}/${file.name}').writeAsBytes(bytes);
