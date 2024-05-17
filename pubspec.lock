@@ -214,12 +214,11 @@ packages:
   pure_ftp:
     dependency: "direct main"
     description:
-      path: "."
-      ref: test_list_dir
-      resolved-ref: "7adb6136b073bdc964fdc1c007f7f02b9ffb4f08"
-      url: "https://github.com/crifurch/pure_ftp"
-    source: git
-    version: "0.7.1"
+      name: pure_ftp
+      sha256: f16978e03a7bb0d5368ac5c4edcccc578121390177a5d6bce915da04b7ff5971
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.2"
   sky_engine:
     dependency: transitive
     description: flutter
