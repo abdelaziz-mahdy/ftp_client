@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ftp_client/ftp_client_manager.dart';
+import 'package:ftp_client/controllers/ftp_client_manager.dart';
 
-class FTPConnectForm extends StatelessWidget {
+class FTPConnectForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final FTPClientManager ftpClientManager;
   final VoidCallback onConnected;
-  final bool _isLoading = false;
 
   const FTPConnectForm({
     super.key,
@@ -15,29 +14,39 @@ class FTPConnectForm extends StatelessWidget {
   });
 
   @override
+  State<FTPConnectForm> createState() => _FTPConnectFormState();
+}
+
+class _FTPConnectFormState extends State<FTPConnectForm> {
+  bool _isLoading = false;
+  String host = '192.168.1.5';
+  String port = '15114';
+  String user = 'anonymous';
+  String pass = '';
+  @override
   Widget build(BuildContext context) {
     return Form(
-      key: formKey,
+      key: widget.formKey,
       child: Column(
         children: [
           TextFormField(
             decoration: const InputDecoration(labelText: 'Host'),
-            onChanged: (value) => ftpClientManager.host = value,
-            initialValue: ftpClientManager.host,
+            onChanged: (value) => host = value,
+            initialValue: host,
           ),
           TextFormField(
             decoration: const InputDecoration(labelText: 'Port'),
-            initialValue: ftpClientManager.port,
-            onChanged: (value) => ftpClientManager.port = value,
+            initialValue: port,
+            onChanged: (value) => port = value,
           ),
           TextFormField(
             decoration: const InputDecoration(labelText: 'Username'),
             initialValue: 'anonymous',
-            onChanged: (value) => ftpClientManager.user = value,
+            onChanged: (value) => user = value,
           ),
           TextFormField(
             decoration: const InputDecoration(labelText: 'Password'),
-            onChanged: (value) => ftpClientManager.pass = value,
+            onChanged: (value) => pass = value,
             obscureText: true,
           ),
           const SizedBox(height: 20),
@@ -46,12 +55,23 @@ class FTPConnectForm extends StatelessWidget {
               : ElevatedButton(
                   onPressed: () async {
                     try {
-                      await ftpClientManager.connect();
-                      onConnected();
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      await widget.ftpClientManager.connect(
+                        host: host,
+                        port: port,
+                        user: user,
+                        pass: pass,
+                      );
+                      widget.onConnected();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to connect, $e')));
                     }
+                    setState(() {
+                      _isLoading = false;
+                    });
                   },
                   child: const Text('Connect'),
                 ),

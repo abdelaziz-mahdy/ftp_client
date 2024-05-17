@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'ftp_client_manager.dart';
-import 'download_manager.dart';
+import '../controllers/ftp_client_manager.dart';
+import '../controllers/download_manager.dart';
 import 'ftp_connect_form.dart';
 import 'directory_list.dart';
 

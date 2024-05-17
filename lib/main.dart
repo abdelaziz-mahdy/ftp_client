@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ftp_client/ftp_home_page.dart';
+import 'package:ftp_client/widgets/ftp_home_page.dart';
 
 void main() => runApp(const MyApp());
 
