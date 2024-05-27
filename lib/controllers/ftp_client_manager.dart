@@ -25,7 +25,7 @@ class FTPClientManager {
       await ftpConnect!.connect();
       await ftpConnect!.socket.setTransferType(FtpTransferType.binary);
       isConnected = true;
-      mainDirectory = ftpConnect!.currentDirectory.path;
+      mainDirectory = ftpConnect!.fs.rootDirectory.path;
       await listDirectory();
     } catch (e) {
       rethrow;
@@ -67,7 +67,7 @@ class FTPClientManager {
         }
       });
 
-      if (dir != null && dir.path != mainDirectory) {
+      if (dir != null && !ftpConnect!.fs.isRoot(dir)) {
         dirEntries.insert(
           0,
           FtpDirectory(path: '..', client: ftpConnect!),

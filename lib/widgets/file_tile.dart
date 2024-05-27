@@ -68,8 +68,8 @@ class _FileTileState extends State<FileTile> {
             await widget.ftpClientManager.ftpConnect!.changeDirectoryUp();
             await widget.ftpClientManager.listDirectory();
           } else {
-            // await widget.ftpClientManager.ftpConnect!
-            //     .changeDirectory(entry.name);
+            await widget.ftpClientManager.ftpConnect!
+                .changeDirectory(entry.name);
             await widget.ftpClientManager.listDirectory(entry as FtpDirectory);
           }
         } else {
