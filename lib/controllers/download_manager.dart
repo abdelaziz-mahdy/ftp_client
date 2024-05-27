@@ -4,19 +4,33 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pure_ftp/pure_ftp.dart';
 
 typedef ProgressCallback = void Function(double progress);
-
 typedef SnackBarCallback = void Function(FtpFile file, String message);
 
 class DownloadManager {
-  final List<FtpFile> _downloadQueue = [];
+  final List<FtpEntry> _downloadQueue = [];
   bool _isDownloading = false;
+  int totalFiles = 0;
+  int downloadedFiles = 0;
+  int totalSize = 0;
+  int downloadedSize = 0;
 
   Future<void> addToQueue(
-      FtpFile file,
+      FtpEntry entry,
       FtpClient ftpConnect,
       SnackBarCallback snackBarCallback,
       ProgressCallback progressCallback) async {
-    _downloadQueue.add(file);
+    if (entry is FtpFile) {
+      _downloadQueue.add(entry);
+      totalFiles++;
+      totalSize += entry.info?.size ?? 0;
+    } else if (entry is FtpDirectory) {
+      final entries = await ftpConnect.fs.listDirectory(directory: entry);
+      for (var subEntry in entries) {
+        await addToQueue(
+            subEntry, ftpConnect, snackBarCallback, progressCallback);
+      }
+    }
+
     if (!_isDownloading) {
       _startDownload(ftpConnect, snackBarCallback, progressCallback);
     }
@@ -29,12 +43,14 @@ class DownloadManager {
     _isDownloading = true;
 
     while (_downloadQueue.isNotEmpty) {
-      final file = _downloadQueue.removeAt(0);
+      final entry = _downloadQueue.removeAt(0);
       try {
-        await _downloadFile(
-            file, ftpConnect, snackBarCallback, progressCallback);
+        if (entry is FtpFile) {
+          await _downloadFile(
+              entry, ftpConnect, snackBarCallback, progressCallback);
+        }
       } catch (e) {
-        snackBarCallback(file, e.toString());
+        snackBarCallback(entry as FtpFile, e.toString());
       }
     }
 
@@ -56,16 +72,20 @@ class DownloadManager {
       double speed = receivedBytes / elapsed.inSeconds;
       print(
           "downloaded: $receivedBytes of $totalBytes, $percent% calculated ${receivedBytes / totalBytes * 100}%, speed: ${(speed / 1024 / 1024).toStringAsFixed(2)} MB/second");
-      if (file.info?.size != null) {
-        progressCallback((receivedBytes / file.info!.size!));
-      } else {
-        progressCallback(percent / 100);
-      }
+
+      downloadedSize = receivedBytes;
+      progressCallback(receivedBytes / file.info!.size!);
     });
 
     await File('${downloadsDirectory!.path}/${file.name}').writeAsBytes(bytes);
 
+    downloadedFiles++;
+    downloadedSize += file.info?.size ?? 0;
+
     snackBarCallback(file, 'Downloaded: ${file.name}');
     progressCallback(1.0);
+  }
+  bool isDownloading(FtpEntry entry) {
+    return entry is FtpFile && _downloadQueue.contains(entry) || entry is FtpDirectory && _downloadQueue.contains(entry);
   }
 }

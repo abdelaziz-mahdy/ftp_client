@@ -44,22 +44,32 @@ class _FileTileState extends State<FileTile> {
     final subtitle = isDirectory
         ? null
         : 'Size: ${filesize(entry.info?.size ?? 0) ?? "unknown"}';
+    final String? progressText;
+    if (widget.downloadManager.isDownloading(entry)) {
+      progressText = isDirectory
+          ? 'Files: ${widget.downloadManager.downloadedFiles}/${widget.downloadManager.totalFiles} | Size: ${filesize(widget.downloadManager.downloadedSize)}/${filesize(widget.downloadManager.totalSize)} | Speed: ${(widget.downloadManager.downloadedSize / 1024 / 1024).toStringAsFixed(2)} MB/s'
+          : 'Downloading: ${(downloadProgress * 100).toStringAsFixed(2)}%';
+    } else {
+      progressText = null;
+    }
 
     return ListTile(
       leading: Icon(isDirectory ? Icons.folder : Icons.file_copy),
       title: Text(entry.name!),
-      subtitle: isDirectory
+      subtitle: progressText == null
           ? null
-          : Text(subtitle! +
-              (downloadProgress > 0
-                  ? ' | Downloading: ${(downloadProgress * 100).toStringAsFixed(2)}%'
-                  : '')),
+          : isDirectory
+              ? Text(progressText)
+              : Text(subtitle! +
+                  (downloadProgress > 0 ? ' | ${progressText ?? ""}' : '')),
       onTap: () async {
         if (isDirectory) {
           if (entry.name == '..') {
             await widget.ftpClientManager.ftpConnect!.changeDirectoryUp();
             await widget.ftpClientManager.listDirectory();
           } else {
+            // await widget.ftpClientManager.ftpConnect!
+            //     .changeDirectory(entry.name);
             await widget.ftpClientManager.listDirectory(entry as FtpDirectory);
           }
         } else {

@@ -23,6 +23,7 @@ class _FTPConnectFormState extends State<FTPConnectForm> {
   String port = '15114';
   String user = 'anonymous';
   String pass = '';
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -67,7 +68,8 @@ class _FTPConnectFormState extends State<FTPConnectForm> {
                       widget.onConnected();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to connect, $e')));
+                        SnackBar(content: Text('Failed to connect, $e')),
+                      );
                     }
                     setState(() {
                       _isLoading = false;

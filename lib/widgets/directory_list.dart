@@ -18,31 +18,33 @@ class DirectoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: ftpClientManager.isLoadingNotifier,
-        builder: (context, isLoading, _) {
-          if (isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return ValueListenableBuilder(
-                valueListenable: ftpClientManager.entriesNotifier,
-                builder: (context, entries, _) {
-                  if (entries.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else {
-                    return ListView.builder(
-                      itemCount: entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = entries[index];
-                        return FileTile(
-                          entry: entry,
-                          ftpClientManager: ftpClientManager,
-                          downloadManager: downloadManager,
-                        );
-                      },
+      valueListenable: ftpClientManager.isLoadingNotifier,
+      builder: (context, isLoading, _) {
+        if (isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return ValueListenableBuilder(
+            valueListenable: ftpClientManager.entriesNotifier,
+            builder: (context, entries, _) {
+              if (entries.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                return ListView.builder(
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    return FileTile(
+                      entry: entry,
+                      ftpClientManager: ftpClientManager,
+                      downloadManager: downloadManager,
                     );
-                  }
-                });
-          }
-        });
+                  },
+                );
+              }
+            },
+          );
+        }
+      },
+    );
   }
 }

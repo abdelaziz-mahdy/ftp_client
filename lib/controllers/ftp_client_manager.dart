@@ -6,11 +6,13 @@ class FTPClientManager {
   FtpClient? ftpConnect;
   ValueNotifier<List<FtpEntry>> entriesNotifier = ValueNotifier([]);
   ValueNotifier<bool> isLoadingNotifier = ValueNotifier(false);
-  Future<void> connect(
-      {String host = 'localhost',
-      String port = '21',
-      String user = 'anonymous',
-      String pass = ''}) async {
+  String? mainDirectory;
+  Future<void> connect({
+    String host = 'localhost',
+    String port = '21',
+    String user = 'anonymous',
+    String pass = '',
+  }) async {
     ftpConnect = FtpClient(
       socketInitOptions:
           FtpSocketInitOptions(host: host, port: int.parse(port)),
@@ -23,6 +25,7 @@ class FTPClientManager {
       await ftpConnect!.connect();
       await ftpConnect!.socket.setTransferType(FtpTransferType.binary);
       isConnected = true;
+      mainDirectory = ftpConnect!.currentDirectory.path;
       await listDirectory();
     } catch (e) {
       rethrow;
@@ -64,7 +67,7 @@ class FTPClientManager {
         }
       });
 
-      if (dir != null && dir.path != '/') {
+      if (dir != null && dir.path != mainDirectory) {
         dirEntries.insert(
           0,
           FtpDirectory(path: '..', client: ftpConnect!),
